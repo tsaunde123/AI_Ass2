@@ -1,4 +1,4 @@
-candidate_number(12345).
+candidate_number(38640).
 
 solve_task(Task,Cost):-
   my_agent(Agent),
