@@ -20,18 +20,21 @@ solve_task_Astar(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
   achieved(Task,Agenda,RPath,Cost,NewPos).
 solve_task_Astar(Task,Agenda,D,RR,Cost,NewPos) :-
   Agenda = [[c(F,G,P)|RPath]|Paths],
+  writeln(Agenda),
   Task = go(Goal),
-  findall([c(F1,G1,P1),R|RPath], %1st arg of findall is template of return value (what the return value should look like)
+  findall([c(F1,G1,P1),R|RPath], %first arg of findall is template of return value (what the return value should look like)
     (search(P,P1,R,C), % find all children of curr pos
      \+ memberchk(R,RPath), % check that returned child isnt already in path
      G1 is G+C, % G is cost to arrive to curr pos, update G with cost to move to child
      map_distance(P1,Goal,H), % calc H that is heuristic (estimated cost) to get to goal
-     F1 is G1+H), % update F which is total estimated cost to get to goal
+     F1 is G1+H,
+     \+memberchk([c(_,_,P1)|_],Paths)), % update F which is total estimated cost to get to goal
     Children), % store result in Children
   sort(Children,SChildren),
+  writeln(SChildren),
   D1 is D+1,
-  append(SChildren,Paths,NewAgenda), sort(NewAgenda, SNewAgenda), % append and sort is equivalent to merge
-  %mergelists(SChildren,Paths,NewAgenda), % doesnt work... so using append+sort for now
+  append(Paths,SChildren,NewAgenda), sort(NewAgenda, SNewAgenda), % append and sort is equivalent to merge
+  %mergelists(SChildren,Paths,SNewAgenda), % doesnt work... so using append+sort for now
   solve_task_Astar(Task,SNewAgenda,D1,RR,Cost,NewPos).
 
 % Breadth-first search for o(Goal) and c(Goal) as don't know location of oracles and charging points
@@ -41,7 +44,10 @@ solve_task_bfs(Task,Agenda,D,RR,Cost,NewPos) :-
   Agenda = [[c(F,F,P)|RPath]|Paths], % dont know position of o and c bfs -> no heuristic/ estimated cost to goal
   %Task = find(Goal),
   findall([c(F1,F1,P1),R|RPath],
-    (search(P,P1,R,C),\+memberchk(R,RPath),F1 is F+C,\+member([c(_,_,P1)|_],Paths)),
+    (search(P,P1,R,C),
+     \+memberchk(R,RPath),
+     F1 is F+C,
+     \+member([c(_,_,P1)|_],Paths)),
     Children),
   %sort(Children,SChildren),
   D1 is D+1,
