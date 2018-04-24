@@ -99,10 +99,11 @@ getListHead([Head|Tail], Head).
 %
 % Breadth-first search for o(Goal) and c(Goal) as don't know location of oracles and charging points
 solve_task_bfs3(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos,OPos) :-
-  % writeln('call to bfs base case'),
-  getClosestOraclePos(Task,Current,RPath,Cost,NewPos,OPos).
+  writeln('Task':Task),
+  getClosestOraclePos(Task,Current,RPath,Cost,NewPos,OPos),
+  writeln('HERE').
 solve_task_bfs3(Task,Agenda,D,RR,Cost,NewPos,OPos) :-
-  % writeln('call to main bfs'),
+  writeln('call to main bfs'),
   Agenda = [[c(F,F,P)|RPath]|Paths], % dont know position of o and c bfs -> no heuristic/ estimated cost to goal
   %Task = find(Goal),
   findall([c(F1,F1,P1),R|RPath],
@@ -139,11 +140,12 @@ solve_task_Astar(Task,Agenda,D,RR,Cost,NewPos) :-
   solve_task_Astar(Task,SNewAgenda,D1,RR,Cost,NewPos).
 
 getClosestOraclePos(find(O),Current,RPath,Cost,NewPos,OPos) :-
-  % writeln('Called Base Case'),
+  writeln(O),
+  writeln('Called Base Case'),
   Current = [[c(Cost,_,NewPos)|RPath]|_],
-  % writeln('Current'),
+  writeln('Current'),
   ( O=none    -> true
-  ; otherwise -> RPath = [Last|_],map_adjacent(Last,OPos,O)
+  ; otherwise -> RPath = [Last|_],map_adjacent(Last,OPos,O),writeln('otherwise')
   ).
   % writeln('OPos':OPos).
 
