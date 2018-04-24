@@ -4,6 +4,8 @@ solve_task(Task,Cost):-
   my_agent(Agent),
   query_world( agent_current_position, [Agent,P] ),
   Task =.. [Command,Goal],
+  writeln(Command),
+  writeln(Goal),
   (Goal = o(X) -> solve_task_bfs(Task,[[c(0,0,P),P]],0,R,Cost,_NewPos) % if we need to find oracle or charge point
   ;Goal = c(X) -> solve_task_bfs(Task,[[c(0,0,P),P]],0,R,Cost,_NewPos) % use bfs as goal pos is unknown
   ;otherwise -> G0 is 0, % else use Astar search

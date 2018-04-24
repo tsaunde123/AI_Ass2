@@ -26,17 +26,28 @@ find_identity_o(A):-
   writeln('Agent'),
   query_world( agent_current_position, [Agent,P] ),
   writeln('Query world'),
-  findall(OPos, %find and save all CP locations
-    (solve_task_bfs(find(c(X)),[[c(0,0,P),P]],0,R,Cost,_NewPos,OPos)),
-    ChargePointsPos),
-  writeln('FindAll'),
-  writeln('ChargePointsPos':ChargePointsPos),
-  getListHead(ChargePointsPos,firstChargePoint), %go to first CP as safety measure
+  % findall(OPos, %find and save all CP locations
+  %   (writeln('In findall'),solve_task_bfs(find(c(_)),[[c(0,0,P),P]],0,R,Cost,_NewPos,OPos),writeln('one iter')),
+  %   ChargePointsPos),
+  ChargePointsPos = [],
+  writeln('Starting BFS'),
+  Task = [Command,Goal],
+  Command = find,
+  Goal = c(1),
+  solve_task_bfs3(Task,[[c(0,0,P),P]],0,R,Cost,_NewPos,CPos1),
+  writeln('BFS1'),
+  Goal = c(2),
+  solve_task_bfs3(Task,[[c(0,0,P),P]],0,R,Cost,_NewPos,CPos2),
+  writeln('BFS1'),
+  append(CPos1,ChargePointsPos,ChargePointsPos),append(CPos1,ChargePointsPos,ChargePointsPos),
   G0 is 0, % else use Astar search
-  map_distance(P,firstChargePoint,H0), % original estimate of cost to get to goal
+  map_distance(P,CPos1,H0), % original estimate of cost to get to goal
   F0 is G0+H0,
   %solve_task_Astar(Task,[[c(F0,G0,P),P]],0,R,Cost,_NewPos)
-  solve_task_Astar(go(firstChargePoint),[[c(F0,G0,P),P]],0,R,Cost,_NewPos).
+  solve_task_Astar(go(CPos1),[[c(F0,G0,P),P]],0,RAstar,Cost,_NewPos),
+  reverse(RAstar,[_Init|Path]),
+  query_world( agent_do_moves, [Agent,Path] ).
+
 
 getListHead([]).
 getListHead([Head|[]], Head).
@@ -87,9 +98,11 @@ getListHead([Head|Tail], Head).
 % append(oracle,VisitedOracles, NewVisitedOracles),
 %
 % Breadth-first search for o(Goal) and c(Goal) as don't know location of oracles and charging points
-solve_task_bfs(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos,OPos) :-
-  getClosestOraclePos(find(O),Current,RPath,Cost,NewPos,OPos).
-solve_task_bfs(Task,Agenda,D,RR,Cost,NewPos,OPos) :-
+solve_task_bfs3(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos,OPos) :-
+  % writeln('call to bfs base case'),
+  getClosestOraclePos(Task,Current,RPath,Cost,NewPos,OPos).
+solve_task_bfs3(Task,Agenda,D,RR,Cost,NewPos,OPos) :-
+  % writeln('call to main bfs'),
   Agenda = [[c(F,F,P)|RPath]|Paths], % dont know position of o and c bfs -> no heuristic/ estimated cost to goal
   %Task = find(Goal),
   findall([c(F1,F1,P1),R|RPath],
@@ -101,7 +114,7 @@ solve_task_bfs(Task,Agenda,D,RR,Cost,NewPos,OPos) :-
   %sort(Children,SChildren),
   D1 is D+1,
   append(Paths, Children, NewAgenda), % not sure why we just append...
-  solve_task_bfs(Task,NewAgenda,D1,RR,Cost,NewPos,OPos).
+  solve_task_bfs3(Task,NewAgenda,D1,RR,Cost,NewPos,OPos).
 
 % A-star search for go(Goal)
 solve_task_Astar(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
@@ -126,13 +139,13 @@ solve_task_Astar(Task,Agenda,D,RR,Cost,NewPos) :-
   solve_task_Astar(Task,SNewAgenda,D1,RR,Cost,NewPos).
 
 getClosestOraclePos(find(O),Current,RPath,Cost,NewPos,OPos) :-
-  writeln('Called Base Case'),
+  % writeln('Called Base Case'),
   Current = [[c(Cost,_,NewPos)|RPath]|_],
+  % writeln('Current'),
   ( O=none    -> true
   ; otherwise -> RPath = [Last|_],map_adjacent(Last,OPos,O)
-  ),
-  writeln('OPos':OPos)
-.
+  ).
+  % writeln('OPos':OPos).
 
 achieved(go(Exit),Current,RPath,Cost,NewPos) :-
   Current = [[c(Cost,_,NewPos)|RPath]|_],
