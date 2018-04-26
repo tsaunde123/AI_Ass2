@@ -48,15 +48,16 @@ find_identity_o(A):-
   pathToOracle(Agent,CPos1,DistToCP1,Path1), %path to CP1
   pathToOracle(Agent,CPos2,DistToCP2,Path2), %path to CP2
   (DistToCP1 < DistToCP2 -> goCP(Agent,CPos1),
-                            navigateMap(Agent,VisitedOracles,CPos1,Actors)
+                            navigateMap(Agent,VisitedOracles,CPos1,Actors,ActorGuess)
   ;otherwise             -> goCP(Agent,CPos2),
-                            navigateMap(Agent,VisitedOracles,CPos2,Actors)).
+                            navigateMap(Agent,VisitedOracles,CPos2,Actors,ActorGuess)),
+  A=ActorGuess.
   % closestCP(Agent,ChargePointsPosList,ClosestCP,DistToClosest),
   % goCP(Agent,ClosestCP),
   % navigateMap(Agent,VisitedOracles,ChargePointsPosList,Actors).
 
 
-navigateMap(Agent,VisitedOracles,ChargePos,Actors) :-
+navigateMap(Agent,VisitedOracles,ChargePos,Actors,A) :-
   query_world( agent_current_position, [Agent,P] ),
   solve_task_bfsP(find(o(_)),[[c(0,0,P),P]],0,_,_,_,OPos,OID),%!, %find oracle Pos % do i need exclamation mark?
   writeln('Found nearest Oracle':OPos),
@@ -75,13 +76,11 @@ navigateMap(Agent,VisitedOracles,ChargePos,Actors) :-
                                      append([OPos],VisitedOracles,NewVisitedOracles)
   ;writeln('Not enough fuel to get there and back to charge station')
   ),
-  % findall(Actor,(wp:actor_links(Actor,Links), member(L, Links), member(Actor, Actors)), FilteredActors),
-  % writeln("Possible:" : FilteredActors),
-  % (FilteredActors = [Answer|[]] -> A = Answer
-  % ;otherwise -> find_identity_2(A, FilteredActors)
-  % ),
-  writeln('Recursive Call'),
-  navigateMap(Agent,NewVisitedOracles,ChargePos,Actors).
+  findall(Actor,(wp:actor_links(Actor,Links), member(L, Links), member(Actor, Actors)), FilteredActors),
+  writeln("POSSIBLE ACTORSSSSSSSS:" : FilteredActors),
+  (FilteredActors = [Answer|[]] -> A = Answer
+  ;otherwise -> writeln('Recursive Call'),
+                navigateMap(Agent,NewVisitedOracles,ChargePos,FilteredActors,A)).
 
 
 pathToOracle(Agent,OraclePos,DistToOracle,Path) :-
