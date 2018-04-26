@@ -4,8 +4,6 @@ solve_task(Task,Cost):-
   my_agent(Agent),
   query_world( agent_current_position, [Agent,P] ),
   Task =.. [Command,Goal],
-  writeln(Command),
-  writeln(Goal),
   (Goal = o(X) -> solve_task_bfs(Task,[[c(0,0,P),P]],0,R,Cost,_NewPos) % if we need to find oracle or charge point
   ;Goal = c(X) -> solve_task_bfs(Task,[[c(0,0,P),P]],0,R,Cost,_NewPos) % use bfs as goal pos is unknown
   ;otherwise -> G0 is 0, % else use Astar search
@@ -14,15 +12,18 @@ solve_task(Task,Cost):-
                 solve_task_Astar(Task,[[c(F0,G0,P),P]],0,R,Cost,_NewPos)
   ),
   !,
+  writeln('reversing path'),
   reverse(R,[_Init|Path]),
-  query_world( agent_do_moves, [Agent,Path] ).
+  writeln('reversed path'),
+  writeln('Gonna do moves'),
+  query_world( agent_do_moves, [Agent,Path] ),
+  writeln('done moves').
 
 % A-star search for go(Goal)
 solve_task_Astar(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
   achieved(Task,Agenda,RPath,Cost,NewPos).
 solve_task_Astar(Task,Agenda,D,RR,Cost,NewPos) :-
   Agenda = [[c(F,G,P)|RPath]|Paths],
-  writeln(Agenda),
   Task = go(Goal),
   findall([c(F1,G1,P1),R|RPath], %first arg of findall is template of return value (what the return value should look like)
     (search(P,P1,R,C), % find all children of curr pos
@@ -33,7 +34,6 @@ solve_task_Astar(Task,Agenda,D,RR,Cost,NewPos) :-
      \+memberchk([c(_,_,P1)|_],Paths)), % update F which is total estimated cost to get to goal
     Children), % store result in Children
   sort(Children,SChildren),
-  writeln(SChildren),
   D1 is D+1,
   append(Paths,SChildren,NewAgenda), sort(NewAgenda, SNewAgenda), % append and sort is equivalent to merge
   %mergelists(SChildren,Paths,SNewAgenda), % doesnt work... so using append+sort for now
