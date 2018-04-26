@@ -48,16 +48,16 @@ find_identity_o(A):-
   pathToOracle(Agent,CPos1,DistToCP1,Path1), %path to CP1
   pathToOracle(Agent,CPos2,DistToCP2,Path2), %path to CP2
   (DistToCP1 < DistToCP2 -> goCP(Agent,CPos1),
-                            navigateMap(Agent,VisitedOracles,CPos1,Actors,ActorGuess)
+                            navigateMap(Agent,VisitedOracles,CPos1,CPos2,Actors,ActorGuess)
   ;otherwise             -> goCP(Agent,CPos2),
-                            navigateMap(Agent,VisitedOracles,CPos2,Actors,ActorGuess)),
+                            navigateMap(Agent,VisitedOracles,CPos1,CPos2,Actors,ActorGuess)),
   A=ActorGuess.
   % closestCP(Agent,ChargePointsPosList,ClosestCP,DistToClosest),
   % goCP(Agent,ClosestCP),
   % navigateMap(Agent,VisitedOracles,ChargePointsPosList,Actors).
 
 
-navigateMap(Agent,VisitedOracles,ChargePos,Actors,A) :-
+navigateMap(Agent,VisitedOracles,CPos1,CPos2,Actors,A) :-
   query_world( agent_current_position, [Agent,P] ),
   solve_task_bfsP(find(o(_)),[[c(0,0,P),P]],0,_,_,_,OPos,OID),%!, %find oracle Pos % do i need exclamation mark?
   writeln('Found nearest Oracle':OPos),
@@ -72,7 +72,11 @@ navigateMap(Agent,VisitedOracles,ChargePos,Actors,A) :-
                                      writeln('Arrived at oracle'),
                                      query_world(agent_ask_oracle,[Agent,OID,link,L]),
                                      writeln('Link':L),
-                                     goCP(Agent,ChargePos), %can just reverse path and to go back to oracle
+                                     pathToOracle(Agent,CPos1,DistToCP1,Path1), %path to CP1
+                                     pathToOracle(Agent,CPos2,DistToCP2,Path2), %path to CP2
+                                     (DistToCP1 < DistToCP2 -> goCP(Agent,CPos1)
+                                     ;otherwise             -> goCP(Agent,CPos2)),
+                                     % goCP(Agent,ChargePos), %can just reverse path and to go back to oracle
                                      append([OPos],VisitedOracles,NewVisitedOracles)
   ;writeln('Not enough fuel to get there and back to charge station')
   ),
@@ -80,19 +84,21 @@ navigateMap(Agent,VisitedOracles,ChargePos,Actors,A) :-
   writeln("POSSIBLE ACTORSSSSSSSS:" : FilteredActors),
   (FilteredActors = [Answer|[]] -> A = Answer
   ;otherwise -> writeln('Recursive Call'),
-                navigateMap(Agent,NewVisitedOracles,ChargePos,FilteredActors,A)).
+                navigateMap(Agent,NewVisitedOracles,CPos1,CPos2,FilteredActors,A)).
 
 
 pathToOracle(Agent,OraclePos,DistToOracle,Path) :-
   writeln('In pathToOracle'),
   query_world( agent_current_position, [Agent,P] ),
+  writeln('Fails before query world'),
   G0 is 0,
+  writeln('Fails before map distance'),
   map_distance(P,OraclePos,H0),
   writeln('Fails here?'),
   F0 is G0+H0,
   writeln('Finding adjacent nodes'),
   findall(t(Dist,Adj_pos), %find adjacent neighbor to CP
-       (map_adjacent(OraclePos,Adj_pos,empty),map_distance(P,Adj_pos,Dist)),
+       (map_adjacent(OraclePos,Adj_pos,empty),map_distance(P,Adj_pos,Dist),map_adjacent(Adj_pos,R,empty)),
         Neighbors),
   sort(Neighbors,SNeighbors),
   writeln('Found adjacent nodes'),
@@ -108,7 +114,7 @@ goCP(Agent,CPPos) :-
   map_distance(P,CPPos,H0), % original estimate of cost to get to goal
   F0 is G0+H0,
   findall(t(Dist,Adj_pos),
-       (map_adjacent(CPPos,Adj_pos,empty),map_distance(P,Adj_pos,Dist)),
+       (map_adjacent(CPPos,Adj_pos,empty),map_distance(P,Adj_pos,Dist),map_adjacent(Adj_pos,R,empty)),
         Neighbors),
   sort(Neighbors,SNeighbors),
   writeln('SNeighbors':SNeighbors),
