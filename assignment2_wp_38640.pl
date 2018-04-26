@@ -96,14 +96,15 @@ pathToOracle(Agent,OraclePos,DistToOracle,Path) :-
   map_distance(P,OraclePos,H0),
   writeln('Fails here?'),
   F0 is G0+H0,
-  writeln('Finding adjacent nodes'),
-  findall(t(Dist,Adj_pos), %find adjacent neighbor to CP
-       (map_adjacent(OraclePos,Adj_pos,empty),map_distance(P,Adj_pos,Dist),map_adjacent(Adj_pos,R,empty)),
-        Neighbors),
-  sort(Neighbors,SNeighbors),
-  writeln('Found adjacent nodes'),
-  SNeighbors = [t(D,N)|_],
-  writeln('N':N),
+  % writeln('Finding adjacent nodes'),
+  % findall(t(Dist,Adj_pos), %find adjacent neighbor to CP
+  %      (map_adjacent(OraclePos,Adj_pos,empty),map_distance(P,Adj_pos,Dist),map_adjacent(Adj_pos,R,empty)),
+  %       Neighbors),
+  % sort(Neighbors,SNeighbors),
+  % writeln('Found adjacent nodes'),
+  % SNeighbors = [t(D,N)|_],
+  % writeln('N':N),
+  findNearestNeighbor(P,OraclePos,N),
   solve_task_AstarP(go(N),[[c(F0,G0,P),P]],0,R,Cost,_NewPos),
   reverse(R,[_Init|Path]),
   length(Path,DistToOracle).
@@ -113,14 +114,15 @@ goCP(Agent,CPPos) :-
   G0 is 0, % else use Astar search
   map_distance(P,CPPos,H0), % original estimate of cost to get to goal
   F0 is G0+H0,
-  findall(t(Dist,Adj_pos),
-       (map_adjacent(CPPos,Adj_pos,empty),map_distance(P,Adj_pos,Dist),map_adjacent(Adj_pos,R,empty)),
-        Neighbors),
-  sort(Neighbors,SNeighbors),
-  writeln('SNeighbors':SNeighbors),
-  SNeighbors = [t(D,N)|_],
-  %map_adjacent(CPPos,N,empty),
-  writeln('Adj pos':N),
+  % findall(t(Dist,Adj_pos),
+  %      (map_adjacent(CPPos,Adj_pos,empty),map_distance(P,Adj_pos,Dist),map_adjacent(Adj_pos,R,empty)),
+  %       Neighbors),
+  % sort(Neighbors,SNeighbors),
+  % writeln('SNeighbors':SNeighbors),
+  % SNeighbors = [t(D,N)|_],
+  % %map_adjacent(CPPos,N,empty),
+  % writeln('Adj pos':N),
+  findNearestNeighbor(P,CPPos,N),
   solve_task_AstarP(go(N),[[c(F0,G0,P),P]],0,R,Cost,_NewPos),%!,
   writeln('RPath':R),
   reverse(R,[_Init|Path]),
@@ -151,6 +153,15 @@ closestCP(Agent,ChargePoints,Closest,DistToClosest) :-
   ;otherwise -> Closest = CPos2,
                             DistToClosest is DistToCP2).
 
+findNearestNeighbor(CurrPos,Pos,N) :-
+  findall(t(Dist,Adj_pos),
+       (map_adjacent(Pos,Adj_pos,empty),map_distance(CurrPos,Adj_pos,Dist),map_adjacent(Adj_pos,R,empty)),
+        Neighbors),
+  sort(Neighbors,SNeighbors),
+  writeln('SNeighbors':SNeighbors),
+  SNeighbors = [t(D,N)|_],
+  %map_adjacent(CPPos,N,empty),
+  writeln('Adj pos':N).
 
 % Breadth-first search for o(Goal) and c(Goal) as don't know location of oracles and charging points
 solve_task_bfsP(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos,OPos,O) :-
