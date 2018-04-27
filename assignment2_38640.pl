@@ -12,12 +12,8 @@ solve_task(Task,Cost):-
                 solve_task_Astar(Task,[[c(F0,G0,P),P]],0,R,Cost,_NewPos)
   ),
   !,
-  writeln('reversing path'),
   reverse(R,[_Init|Path]),
-  writeln('reversed path'),
-  writeln('Gonna do moves'),
-  query_world( agent_do_moves, [Agent,Path] ),
-  writeln('done moves').
+  query_world( agent_do_moves, [Agent,Path] ).
 
 % A-star search for go(Goal)
 solve_task_Astar(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
