@@ -1,4 +1,4 @@
-% candidate_number(12345).
+candidate_number(38640).
 
 % Find hidden identity by repeatedly calling agent_ask_oracle(oscar,o(1),link,L)
 % find_identity(-A)
