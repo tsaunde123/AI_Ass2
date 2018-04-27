@@ -21,6 +21,32 @@ solve_task_Astar(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
 solve_task_Astar(Task,Agenda,D,RR,Cost,NewPos) :-
   Agenda = [[c(F,G,P)|RPath]|Paths],
   Task = go(Goal),
+  getChildrenAstar(F,G,P,RPath,Paths,Goal,SChildren),
+  writeln('got children'),
+  D1 is D+1,
+  append(Paths,SChildren,NewAgenda), sort(NewAgenda, SNewAgenda), % append and sort is equivalent to merge
+  solve_task_Astar(Task,SNewAgenda,D1,RR,Cost,NewPos).
+
+% Breadth-first search for o(Goal) and c(Goal) as don't know location of oracles and charging points
+solve_task_bfs(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
+  achieved(Task,Agenda,RPath,Cost,NewPos).
+solve_task_bfs(Task,Agenda,D,RR,Cost,NewPos) :-
+  Agenda = [[c(F,F,P)|RPath]|Paths], % dont know position of o and c bfs -> no heuristic/ estimated cost to goal
+  getChildrenBFS(F,P,RPath,Paths,Children),
+  D1 is D+1,
+  append(Paths, Children, NewAgenda),
+  solve_task_bfs(Task,NewAgenda,D1,RR,Cost,NewPos).
+
+
+getChildrenBFS(F,P,RPath,Paths,Children) :-
+  findall([c(F1,F1,P1),R|RPath],
+    (search(P,P1,R,C),
+     \+memberchk(R,RPath),
+     F1 is F+C,
+     \+member([c(_,_,P1)|_],Paths)),
+    Children).
+
+getChildrenAstar(F,G,P,RPath,Paths,Goal,SChildren) :-
   findall([c(F1,G1,P1),R|RPath], %first arg of findall is template of return value (what the return value should look like)
     (search(P,P1,R,C), % find all children of curr pos
      \+ memberchk(R,RPath), % check that returned child isnt already in path
@@ -29,36 +55,7 @@ solve_task_Astar(Task,Agenda,D,RR,Cost,NewPos) :-
      F1 is G1+H,
      \+memberchk([c(_,_,P1)|_],Paths)), % update F which is total estimated cost to get to goal
     Children), % store result in Children
-  sort(Children,SChildren),
-  D1 is D+1,
-  append(Paths,SChildren,NewAgenda), sort(NewAgenda, SNewAgenda), % append and sort is equivalent to merge
-  %mergelists(SChildren,Paths,SNewAgenda), % doesnt work... so using append+sort for now
-  solve_task_Astar(Task,SNewAgenda,D1,RR,Cost,NewPos).
-
-% Breadth-first search for o(Goal) and c(Goal) as don't know location of oracles and charging points
-solve_task_bfs(Task,Agenda,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
-  achieved(Task,Agenda,RPath,Cost,NewPos).
-solve_task_bfs(Task,Agenda,D,RR,Cost,NewPos) :-
-  Agenda = [[c(F,F,P)|RPath]|Paths], % dont know position of o and c bfs -> no heuristic/ estimated cost to goal
-  %Task = find(Goal),
-  findall([c(F1,F1,P1),R|RPath],
-    (search(P,P1,R,C),
-     \+memberchk(R,RPath),
-     F1 is F+C,
-     \+member([c(_,_,P1)|_],Paths)),
-    Children),
-  %sort(Children,SChildren),
-  D1 is D+1,
-  append(Paths, Children, NewAgenda), % not sure why we just append...
-  solve_task_bfs(Task,NewAgenda,D1,RR,Cost,NewPos).
-
-
-getChildren(F,G,P,RPath) :-
-  search(P,P1,R,C),
-  \+ memberchk(R,RPath),
-  G1 is G+C,
-  map_distance(P1,Task,H),
-  F1 is G1+H.
+  sort(Children,SChildren).
 
 mergelists([],[],[]).
 
